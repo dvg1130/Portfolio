@@ -23,7 +23,7 @@ func NewServer() *Server {
 
 // hander func
 func handler(w http.ResponseWriter, r *http.Request) {
-	w.Write([]byte("Hello, Welcome to the Server"))
+	w.Write([]byte("Hello, Weecome to the Server"))
 
 }
 
