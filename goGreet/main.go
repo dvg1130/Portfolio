@@ -1,8 +1,12 @@
 package main
 
-import "fmt"
+import (
+	"fmt"
+
+	gomodule "github.com/dvg1130/portfolio/goModule"
+)
 
 func main() {
-	message := goGreet.Greet
+	message := gomodule.Greet("Johnny")
 	fmt.Println(message)
 }
