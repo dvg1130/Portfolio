@@ -1,0 +1,46 @@
+## Snippet 1
+
+    Simple Print Statment -  snippet.go
+
+* Summary:
+
+    - Purpose: Basic functionality test to verify the Docker sandbox is connected and executing code correctly.
+
+    - Results:  Prints a static string to confirm successful execution.
+
+
+
+## Snippet 2
+
+    Go Routines and Channels Test - goRC.go
+
+* Summary:
+
+    - Purpose: Simulates a job processing pipeline to validate Go’s concurrency and container process limits.
+
+    - Workers: Three goroutines (workers) listen on the jobs channel.
+
+    - Jobs: Five jobs (integers) are sent into the channel.
+
+    - Results: Each job is processed (doubled), and the result is printed.
+
+
+* Why it's useful:
+
+    Helps test CPU usage and goroutine handling within the container.
+
+    Useful for verifying --pids-limit and runtime stability in the sandbox.
+
+## Snippet 3
+
+    Token Bucket Rate Limiter – rate-limit.go
+
+* Summary:
+    - Purpose: Simulates a basic in-memory rate limiter to test time-based logic, state tracking,
+               and internal throttling mechanisms.
+
+    - Results: Implements a token bucket algorithm with refill logic. The program allows or blocks
+               simulated requests based on the current token count and refill rate. Output reflects
+               which requests are allowed or rate-limited over time.
+
+** test files should be a seperate directory outside of sandbox directory
