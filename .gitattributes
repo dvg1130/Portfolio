@@ -1,0 +1,5 @@
+# Ignore template and static files from language stats
+*.tmpl linguist-vendored
+/static/** linguist-vendored
+/docs/** linguist-vendored
+*.md linguist-documentation
