@@ -8,4 +8,8 @@
 /static/** linguist-vendored
 /docs/** linguist-vendored
 
+*.tmpl linguist-vendored
+*.gohtml linguist-vendored
+*.tpl linguist-vendored
+
 *.go linguist-language=Go
