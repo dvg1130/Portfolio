@@ -1,5 +1,10 @@
 # Ignore template and static files from language stats
 *.tmpl linguist-vendored
+*.md linguist-documentation
+*.txt linguist-documentation
+*.json linguist-vendored
+*.xml linguist-vendored
+*.yml linguist-vendored
 /static/** linguist-vendored
 /docs/** linguist-vendored
-*.md linguist-documentation
+
