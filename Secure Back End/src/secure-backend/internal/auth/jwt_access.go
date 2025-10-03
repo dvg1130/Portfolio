@@ -34,8 +34,8 @@ func CreateAccessToken(username string, UUID string, role string) (string, strin
 
 // verify access token
 func VerifyToken(tokenString string) (jwt.MapClaims, error) {
+	// Parse JWT
 	token, err := jwt.Parse(tokenString, func(token *jwt.Token) (interface{}, error) {
-		//validate signing method
 		if _, ok := token.Method.(*jwt.SigningMethodHMAC); !ok {
 			return nil, fmt.Errorf("unexpected signing method: %v", token.Header["alg"])
 		}
@@ -46,9 +46,10 @@ func VerifyToken(tokenString string) (jwt.MapClaims, error) {
 		return nil, err
 	}
 
-	//return claims
-	if claims, ok := token.Claims.(jwt.MapClaims); ok && token.Valid {
-		return claims, nil
+	claims, ok := token.Claims.(jwt.MapClaims)
+	if !ok || !token.Valid {
+		return nil, errors.New("invalid token")
 	}
-	return nil, errors.New("invalid token")
+
+	return claims, nil
 }

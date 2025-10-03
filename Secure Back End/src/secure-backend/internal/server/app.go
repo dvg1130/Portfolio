@@ -33,10 +33,11 @@ func AppServer(auth_db *sql.DB, data_db *sql.DB, logger *zap.SugaredLogger) *Ser
 	}
 
 	api.InitRoutes_Auth(s.Router, &models.AuthHandlers{
-		Handler:  s.Handler,
-		Login:    s.Login,
-		Register: s.Register,
-		Logout:   s.Logout,
+		Handler:      s.Handler,
+		Login:        s.Login,
+		Register:     s.Register,
+		Logout:       s.Logout,
+		TokenRefresh: s.TokenRefresh,
 	})
 
 	api.InitRoutes_Data(s.Router, s.Data_DB, &models.DataHandlers{

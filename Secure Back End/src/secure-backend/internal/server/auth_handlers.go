@@ -214,5 +214,84 @@ func (s *Server) Logout(w http.ResponseWriter, r *http.Request) {
 
 // refresh token
 func (s *Server) TokenRefresh(w http.ResponseWriter, r *http.Request) {
-	w.Write([]byte("successful connection to Logout"))
+	ctx := r.Context()
+
+	type RefreshRequest struct {
+		RefreshToken string `json:"refresh_token"`
+		DeviceID     string `json:"device_id"`
+	}
+
+	// Parse JSON body
+	var req RefreshRequest
+	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
+		http.Error(w, "invalid request body", http.StatusBadRequest)
+		return
+	}
+
+	// Verify refresh token (can be expired or validly signed)
+	claims, err := auth.VerifyToken(req.RefreshToken)
+	if err != nil && err.Error() != "expired token" {
+		http.Error(w, "invalid token", http.StatusUnauthorized)
+		return
+	}
+
+	username := claims["sub"].(string)
+	key := fmt.Sprintf("refresh:%s", username)
+
+	// Load stored session from Redis
+	sessionJSON, err := s.Redis.Get(ctx, key).Result()
+	if err != nil {
+		http.Error(w, "no session found", http.StatusUnauthorized)
+		return
+	}
+
+	var session models.RefreshSession
+	if err := json.Unmarshal([]byte(sessionJSON), &session); err != nil {
+		http.Error(w, "invalid session format", http.StatusUnauthorized)
+		return
+	}
+
+	// Device ID check
+	if session.DeviceID != req.DeviceID {
+		http.Error(w, "device mismatch", http.StatusUnauthorized)
+		return
+	}
+
+	// extract refresh token from cookie
+	cookie, err := r.Cookie("refresh_token")
+
+	if err != nil {
+		http.Error(w, "missing refresh token", http.StatusUnauthorized)
+		return
+	}
+
+	fmt.Println("Incoming refresh token:", cookie.Value)
+
+	// rotate logic
+	newAccessToken, newRefreshToken, device_id, err := auth.RotateRefreshToken(ctx, s.Redis, cookie.Value)
+	if err != nil {
+		http.Error(w, "invalid or expired refresh token", http.StatusUnauthorized)
+		return
+	}
+
+	// set new refresh token cookie
+	http.SetCookie(w, &http.Cookie{
+		Name:     "refresh_token",
+		Value:    newRefreshToken,
+		Expires:  time.Now().Add(7 * 24 * time.Hour),
+		HttpOnly: true,
+		Secure:   true,
+		Path:     "/token/refresh",
+		SameSite: http.SameSiteStrictMode,
+	})
+
+	// return new access tokenls
+	json.NewEncoder(w).Encode(map[string]string{
+
+		"access_token": newAccessToken,
+		"device_id":    device_id,
+	})
+
+	fmt.Println("new refresh token: ", newRefreshToken)
+
 }
