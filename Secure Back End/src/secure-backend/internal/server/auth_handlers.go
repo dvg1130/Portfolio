@@ -41,6 +41,7 @@ func (s *Server) Login(w http.ResponseWriter, r *http.Request) {
 				"ip":         ip,
 				"path":       r.URL.Path,
 				"user_agent": r.UserAgent(),
+				"category":   "locked",
 			},
 		)
 		http.Error(w, "Too many failed attempts. Try again in 1 hour.", http.StatusTooManyRequests)
@@ -62,6 +63,7 @@ func (s *Server) Login(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, "invalid username or password", http.StatusUnauthorized)
 		logs.LogEvent(s.Logger, "warn", "Failed login attempt", r, map[string]interface{}{
 			"username": req.Username,
+			"category": "auth",
 		})
 		// count failed attempt
 		s.trackFailedAttempt(r.Context(), ip)

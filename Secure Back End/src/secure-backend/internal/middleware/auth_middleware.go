@@ -58,6 +58,7 @@ func RequireRole(role string, logger *zap.SugaredLogger) func(http.Handler) http
 				logs.LogEvent(logger, "warn", "Unauthorized access", r, map[string]interface{}{
 					"username": username,
 					"role":     role,
+					"category": "auth",
 				})
 				return
 			}

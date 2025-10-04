@@ -28,6 +28,7 @@ func (s *Server) AdminGetAll(w http.ResponseWriter, r *http.Request) {
 		logs.LogEvent(s.Logger, "warn", "Unauthorized access", r, map[string]interface{}{
 			"username": username,
 			"role":     role,
+			"category": "restricted",
 		})
 		return
 	}
@@ -76,6 +77,7 @@ func (s *Server) AdminGetOne(w http.ResponseWriter, r *http.Request) {
 		logs.LogEvent(s.Logger, "warn", "Unauthorized access", r, map[string]interface{}{
 			"username": username,
 			"role":     role,
+			"category": "restricted",
 		})
 		return
 	}
@@ -123,6 +125,7 @@ func (s *Server) AdminUpdate(w http.ResponseWriter, r *http.Request) {
 		logs.LogEvent(s.Logger, "warn", "Unauthorized access", r, map[string]interface{}{
 			"username": username,
 			"role":     role,
+			"category": "restricted",
 		})
 		return
 	}

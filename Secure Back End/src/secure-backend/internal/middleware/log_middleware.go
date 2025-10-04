@@ -48,7 +48,7 @@ func LoggingMiddleware(logger *zap.SugaredLogger) func(http.Handler) http.Handle
 
 			// choose level based on status
 			if rec.status >= 400 {
-				logs.LogEvent(logger, "warn", "request completed", r, map[string]interface{}{
+				logs.LogEvent(logger, "warn", "request incompleted", r, map[string]interface{}{
 					"method":    r.Method,
 					"path":      r.URL.Path,
 					"status":    rec.status, // recorder’s status code
@@ -56,6 +56,7 @@ func LoggingMiddleware(logger *zap.SugaredLogger) func(http.Handler) http.Handle
 					"latency":   duration, // time.Since(start)
 					"user":      username, // extracted from context/JWT
 					"role":      role,     // extracted from context/JWT
+
 				})
 			} else {
 				logs.LogEvent(logger, "info", "request completed", r, map[string]interface{}{
@@ -66,6 +67,7 @@ func LoggingMiddleware(logger *zap.SugaredLogger) func(http.Handler) http.Handle
 					"latency":   duration, // time.Since(start)
 					"user":      username, // extracted from context/JWT
 					"role":      role,     // extracted from context/JWT
+
 				})
 			}
 		})
@@ -89,6 +91,7 @@ func IncomingLoggerMiddleware(logger *zap.SugaredLogger) func(http.Handler) http
 				"status":    rec.status,
 				"remote_ip": r.RemoteAddr,
 				"latency":   duration,
+				"category":  "traffic",
 			}
 
 			if rec.status >= 400 {

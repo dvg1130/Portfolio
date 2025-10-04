@@ -19,6 +19,11 @@ func LogEvent(logger *zap.SugaredLogger, level string, msg string, r *http.Reque
 		base[k] = v
 	}
 
+	// ensure category/flag exists
+	if _, ok := base["category"]; !ok {
+		base["category"] = "general" // default if not provided
+	}
+
 	args := make([]interface{}, 0, len(base)*2)
 	for k, v := range base {
 		args = append(args, k, v)
