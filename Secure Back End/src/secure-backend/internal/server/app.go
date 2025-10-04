@@ -40,7 +40,7 @@ func AppServer(auth_db *sql.DB, data_db *sql.DB, logger *zap.SugaredLogger) *Ser
 		TokenRefresh: s.TokenRefresh,
 	})
 
-	api.InitRoutes_Data(s.Router, s.Data_DB, &models.DataHandlers{
+	api.InitRoutes_Data(s.Router, s.Data_DB, s.Logger, &models.DataHandlers{
 		//snakes
 		SnakeGetAll: s.SnakeGetAll,
 		SnakeGetOne: s.SnakeGetOne,
@@ -61,13 +61,15 @@ func AppServer(auth_db *sql.DB, data_db *sql.DB, logger *zap.SugaredLogger) *Ser
 		SnakeHealthDelete: s.SnakeHealthDelete,
 
 		S: s.Data_DB,
-	})
+	},
+	)
 
-	api.InitRoutes_Admin(s.Router, &models.AdminHandlers{
-		AdminGetAll: s.AdminGetAll,
-		AdminGetOne: s.AdminGetOne,
-		AdminUpdate: s.AdminUpdate,
-	})
+	api.InitRoutes_Admin(s.Router, s.Logger,
+		&models.AdminHandlers{
+			AdminGetAll: s.AdminGetAll,
+			AdminGetOne: s.AdminGetOne,
+			AdminUpdate: s.AdminUpdate,
+		})
 
 	api.InitRoutes_Breeding(s.Router, &models.BreedingHandlers{
 		//breeding
@@ -82,7 +84,7 @@ func AppServer(auth_db *sql.DB, data_db *sql.DB, logger *zap.SugaredLogger) *Ser
 	s.Router = helpers.ServeMuxWrapper(
 		s.Router,
 		middleware.SecurityHeaders,
-		middleware.LoggingMiddleware(logger),
+		middleware.IncomingLoggerMiddleware(s.Logger),
 	)
 
 	return s

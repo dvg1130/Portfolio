@@ -71,3 +71,31 @@ func LoggingMiddleware(logger *zap.SugaredLogger) func(http.Handler) http.Handle
 		})
 	}
 }
+
+func IncomingLoggerMiddleware(logger *zap.SugaredLogger) func(http.Handler) http.Handler {
+	return func(next http.Handler) http.Handler {
+		return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+			start := time.Now()
+			rec := &statusRecorder{ResponseWriter: w, status: http.StatusOK}
+
+			next.ServeHTTP(rec, r)
+
+			duration := time.Since(start)
+
+			// log basic info only
+			logFields := map[string]interface{}{
+				"method":    r.Method,
+				"path":      r.URL.Path,
+				"status":    rec.status,
+				"remote_ip": r.RemoteAddr,
+				"latency":   duration,
+			}
+
+			if rec.status >= 400 {
+				logs.LogEvent(logger, "warn", "request completed", r, logFields)
+			} else {
+				logs.LogEvent(logger, "info", "request completed", r, logFields)
+			}
+		})
+	}
+}

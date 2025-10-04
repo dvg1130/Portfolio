@@ -7,15 +7,18 @@ import (
 	"github.com/dvg1130/Portfolio/secure-backend/internal/middleware"
 	validator "github.com/dvg1130/Portfolio/secure-backend/internal/validator/util"
 	"github.com/dvg1130/Portfolio/secure-backend/models"
+	"go.uber.org/zap"
 )
 
 // init routes auth
-func InitRoutes_Data(router *http.ServeMux, S *sql.DB, h *models.DataHandlers) {
+func InitRoutes_Data(router *http.ServeMux, S *sql.DB, logger *zap.SugaredLogger, h *models.DataHandlers) {
 
 	//snake routes
 	router.Handle("/dashboard",
 		middleware.AuthMiddleware(
-			validator.Method(http.MethodGet, http.HandlerFunc(h.SnakeGetAll)),
+			middleware.LoggingMiddleware(logger)(
+				validator.Method(http.MethodGet, http.HandlerFunc(h.SnakeGetAll)),
+			),
 		),
 	)
 

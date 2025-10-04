@@ -46,7 +46,6 @@ func (s *Server) Login(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, "Too many failed attempts. Try again in 1 hour.", http.StatusTooManyRequests)
 		return
 	}
-
 	// fetch user by username
 
 	//query for user
@@ -188,25 +187,38 @@ func (s *Server) Register(w http.ResponseWriter, r *http.Request) {
 
 // logout
 func (s *Server) Logout(w http.ResponseWriter, r *http.Request) {
-	ctx := r.Context()
 
-	// extract refresh token cookie
-	cookie, err := r.Cookie("refresh_token")
-	if err == nil {
-		// delete from Redis
-		s.Redis.Del(ctx, cookie.Value)
-
-		// expire cookie on client
-		http.SetCookie(w, &http.Cookie{
-			Name:     "refresh_token",
-			Value:    "",
-			Expires:  time.Unix(0, 0),
-			HttpOnly: true,
-			Secure:   true,
-			Path:     "/token/refresh",
-			SameSite: http.SameSiteStrictMode,
-		})
+	type LogoutRequest struct {
+		RefreshToken string `json:"refresh_token"`
 	}
+
+	var req LogoutRequest
+	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
+		http.Error(w, "invalid request body", http.StatusBadRequest)
+		return
+	}
+
+	// verify/parse the refresh token to extract username
+	claims, err := auth.VerifyToken(req.RefreshToken)
+	if err != nil {
+		http.Error(w, "invalid token", http.StatusUnauthorized)
+		return
+	}
+
+	username, ok := claims["sub"].(string)
+	if !ok {
+		http.Error(w, "invalid token claims", http.StatusUnauthorized)
+		return
+	}
+	// ctx := r.Context()
+	ctx := auth.AddClaimsToContext(r.Context(), claims)
+	r = r.WithContext(ctx)
+	// fmt.Println(r)
+
+	// delete session from Redis
+	key := fmt.Sprintf("refresh:%s", username)
+	deleted, _ := s.Redis.Del(r.Context(), key).Result()
+	fmt.Println("Deleted keys:", deleted)
 
 	w.WriteHeader(http.StatusOK)
 	w.Write([]byte("Logged out successfully"))
@@ -215,6 +227,15 @@ func (s *Server) Logout(w http.ResponseWriter, r *http.Request) {
 // refresh token
 func (s *Server) TokenRefresh(w http.ResponseWriter, r *http.Request) {
 	ctx := r.Context()
+	// extract refresh token from cookie
+	cookie, err := r.Cookie("refresh_token")
+
+	if err != nil {
+		http.Error(w, "missing refresh token", http.StatusUnauthorized)
+		return
+	}
+
+	fmt.Println("Incoming refresh token:", cookie.Value)
 
 	type RefreshRequest struct {
 		RefreshToken string `json:"refresh_token"`
@@ -231,7 +252,9 @@ func (s *Server) TokenRefresh(w http.ResponseWriter, r *http.Request) {
 	// Verify refresh token (can be expired or validly signed)
 	claims, err := auth.VerifyToken(req.RefreshToken)
 	if err != nil && err.Error() != "expired token" {
-		http.Error(w, "invalid token", http.StatusUnauthorized)
+		http.Error(w, "invalid token handler", http.StatusUnauthorized)
+		fmt.Println(req.RefreshToken)
+		fmt.Println(req.RefreshToken)
 		return
 	}
 
@@ -257,18 +280,9 @@ func (s *Server) TokenRefresh(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	// extract refresh token from cookie
-	cookie, err := r.Cookie("refresh_token")
-
-	if err != nil {
-		http.Error(w, "missing refresh token", http.StatusUnauthorized)
-		return
-	}
-
-	fmt.Println("Incoming refresh token:", cookie.Value)
-
 	// rotate logic
-	newAccessToken, newRefreshToken, device_id, err := auth.RotateRefreshToken(ctx, s.Redis, cookie.Value)
+	newAccessToken, newRefreshToken, device_id, err := auth.RotateRefreshToken(ctx, s.Redis, req.RefreshToken)
+
 	if err != nil {
 		http.Error(w, "invalid or expired refresh token", http.StatusUnauthorized)
 		return

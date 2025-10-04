@@ -5,6 +5,8 @@ import (
 	"strings"
 
 	"github.com/dvg1130/Portfolio/secure-backend/internal/auth"
+	"github.com/dvg1130/Portfolio/secure-backend/logs"
+	"go.uber.org/zap"
 )
 
 func AuthMiddleware(next http.Handler) http.Handler {
@@ -41,7 +43,7 @@ func AuthMiddleware(next http.Handler) http.Handler {
 	})
 }
 
-func RequireRole(role string) func(http.Handler) http.Handler {
+func RequireRole(role string, logger *zap.SugaredLogger) func(http.Handler) http.Handler {
 	return func(next http.Handler) http.Handler {
 		return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 			claims := auth.GetClaimsFromContext(r.Context())
@@ -49,10 +51,14 @@ func RequireRole(role string) func(http.Handler) http.Handler {
 				http.Error(w, "Unauthorized", http.StatusUnauthorized)
 				return
 			}
-
+			username := claims["username"].(string)
 			userRole, ok := claims["role"].(string)
 			if !ok || userRole != role {
 				http.Error(w, "Forbidden: insufficient permissions", http.StatusForbidden)
+				logs.LogEvent(logger, "warn", "Unauthorized access", r, map[string]interface{}{
+					"username": username,
+					"role":     role,
+				})
 				return
 			}
 

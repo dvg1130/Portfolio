@@ -3,6 +3,7 @@ package server
 import (
 	"database/sql"
 	"encoding/json"
+	"fmt"
 	"net/http"
 
 	"github.com/dvg1130/Portfolio/secure-backend/internal/auth"
@@ -69,6 +70,7 @@ func (s *Server) AdminGetOne(w http.ResponseWriter, r *http.Request) {
 	}
 	username := claims["username"].(string)
 	role, ok := claims["role"].(string)
+	fmt.Println("username: ", username)
 	if !ok || role != "admin" {
 		http.Error(w, "forbidden", http.StatusForbidden)
 		logs.LogEvent(s.Logger, "warn", "Unauthorized access", r, map[string]interface{}{

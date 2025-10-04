@@ -9,6 +9,7 @@ import (
 )
 
 func LogEvent(logger *zap.SugaredLogger, level string, msg string, r *http.Request, fields map[string]interface{}) {
+
 	base := map[string]interface{}{
 		"timestamp": time.Now().Format(time.RFC3339),
 		"ip":        helpers.ClientIP(r),

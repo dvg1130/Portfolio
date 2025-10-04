@@ -39,7 +39,7 @@ func RotateRefreshToken(ctx context.Context, redis *redis.Client, oldToken strin
 	claims, err := VerifyToken(oldToken)
 	if err != nil || claims["typ"] != "refresh_token" {
 		fmt.Println("Token validation failed:", err)
-		return "", "", "", errors.New("invalid token")
+		return "", "", "", errors.New("invalid token rotate")
 	}
 
 	username, _ := claims["sub"].(string)
