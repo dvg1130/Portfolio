@@ -1,4 +1,5 @@
 module github.com/dvg1130/Portfolio/secure-auth
+
 go 1.24.1
 
 require (
