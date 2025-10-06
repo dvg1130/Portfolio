@@ -10,13 +10,13 @@ import (
 	"github.com/dvg1130/Portfolio/secure-auth/models"
 )
 
-type ClientIn struct {
+type Client struct {
 	BaseURL    string
 	HTTPClient *http.Client
 }
 
-func NewClient(baseURL string) *models.Client {
-	return &models.Client{
+func NewClient(baseURL string) *Client {
+	return &Client{
 		BaseURL: baseURL,
 		HTTPClient: &http.Client{
 			Timeout: 10 * time.Second,
@@ -24,7 +24,7 @@ func NewClient(baseURL string) *models.Client {
 	}
 }
 
-func (c *ClientIn) Login(username, password string) (*models.LoginResponse, error) {
+func (c *Client) Login(username, password string) (*models.LoginResponse, error) {
 	payload := map[string]string{
 		"username": username,
 		"password": password,
