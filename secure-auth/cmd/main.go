@@ -28,7 +28,7 @@ func main() {
 	}()
 
 	server := server.AppServer(auth_db, logger)
-	http.ListenAndServe(":8003", server.Router)
+	http.ListenAndServe(":8080", server.Router)
 	if err != nil {
 		fmt.Println("error starting server")
 	}

@@ -4,6 +4,7 @@ import (
 	"database/sql"
 	"net/http"
 
+	"github.com/dvg1130/Portfolio/secure-auth/authsdk"
 	"github.com/dvg1130/Portfolio/secure-auth/internal/api"
 	"github.com/dvg1130/Portfolio/secure-auth/internal/helpers"
 	"github.com/dvg1130/Portfolio/secure-auth/internal/middleware"
@@ -14,12 +15,12 @@ import (
 )
 
 type Server struct {
-	Router  *http.ServeMux
-	AUTH_DB *sql.DB
-
-	Redis  *redis.Client
-	Logger *zap.SugaredLogger
-	S      *sql.DB
+	Router      *http.ServeMux
+	AUTH_DB     *sql.DB
+	AUTH_CLIENT *authsdk.SDKClient
+	Redis       *redis.Client
+	Logger      *zap.SugaredLogger
+	S           *sql.DB
 }
 
 func AppServer(auth_db *sql.DB, logger *zap.SugaredLogger) *Server {
@@ -31,8 +32,13 @@ func AppServer(auth_db *sql.DB, logger *zap.SugaredLogger) *Server {
 		Logger:  logger,
 	}
 
+	api.InitRoutes_Proxy(s.Router, &models.AuthHandlers{
+		ProxyLogin: s.ProxyLogin,
+	})
+
 	api.InitRoutes_Auth(s.Router, &models.AuthHandlers{
-		Handler:      s.Handler,
+		Handler: s.Handler,
+
 		Login:        s.Login,
 		Register:     s.Register,
 		Logout:       s.Logout,

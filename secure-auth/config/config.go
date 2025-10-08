@@ -11,6 +11,7 @@ import (
 //init & load values
 
 var AuthConfig models.AuthConfigStruct
+var ProxyConfig models.ProxyConfigStruct
 
 func init() {
 
@@ -25,6 +26,10 @@ func init() {
 		PORT:           os.Getenv("AUTH_PORT"),
 		JWT_SECRET_KEY: os.Getenv("JWT_SECRETt_KEY"),
 		REDIS_ADDR:     os.Getenv("REDIS_ADDR"),
+	}
+
+	ProxyConfig = models.ProxyConfigStruct{
+		BASE_URL: os.Getenv("BASE_URL"),
 	}
 
 }

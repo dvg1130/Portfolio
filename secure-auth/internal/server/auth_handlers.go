@@ -25,17 +25,12 @@ func (s *Server) Handler(w http.ResponseWriter, r *http.Request) {
 // login
 func (s *Server) Login(w http.ResponseWriter, r *http.Request) {
 	//requestid
-	// Use same type/key defined globally in your middleware package
+
 	requestID, _ := r.Context().Value(middleware.RequestIDKey).(string)
 	if requestID == "" {
 		// Fallback to header if context is missing it
 		requestID = r.Header.Get("X-Request-ID")
 	}
-
-	// Optional: fallback UUID to guarantee every request has an ID
-	// if requestID == "" {
-	//     requestID = uuid.New().String()
-	// }
 
 	claims := auth.GetClaimsFromContext(r.Context())
 	if claims != nil {
@@ -114,7 +109,8 @@ func (s *Server) Login(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, "failed to generate refresh token", http.StatusInternalServerError)
 		return
 	}
-
+	fmt.Println("access token from auth_handler", accesstoken)
+	fmt.Println("refresh token from auth_handler", refreshToken)
 	//store refresh toekn and device_id in redis
 	session := models.RefreshSession{
 		RefreshToken: refreshToken,
@@ -138,8 +134,8 @@ func (s *Server) Login(w http.ResponseWriter, r *http.Request) {
 		Value:    refreshToken,
 		Expires:  exp,
 		HttpOnly: true,
-		Secure:   true,             // only over HTTPS
-		Path:     "/token/refresh", // restrict usage
+		Secure:   true,                      // only over HTTPS
+		Path:     "/api/auth/token/refresh", // restrict usage
 		SameSite: http.SameSiteStrictMode,
 	})
 
@@ -379,7 +375,7 @@ func (s *Server) TokenRefresh(w http.ResponseWriter, r *http.Request) {
 		Expires:  time.Now().Add(7 * 24 * time.Hour),
 		HttpOnly: true,
 		Secure:   true,
-		Path:     "/token/refresh",
+		Path:     "/api/auth/token/refresh",
 		SameSite: http.SameSiteStrictMode,
 	})
 

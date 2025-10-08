@@ -7,16 +7,19 @@ import (
 	"net/http"
 	"time"
 
+	"github.com/dvg1130/Portfolio/secure-auth/config"
 	"github.com/dvg1130/Portfolio/secure-auth/models"
 )
 
-type ClientIn struct {
+type SDKClient struct {
 	BaseURL    string
 	HTTPClient *http.Client
 }
 
-func NewClient(baseURL string) *ClientIn {
-	return &ClientIn{
+func NewClient() *SDKClient {
+	var baseURL = config.ProxyConfig.BASE_URL
+
+	return &SDKClient{
 		BaseURL: baseURL,
 		HTTPClient: &http.Client{
 			Timeout: 10 * time.Second,
@@ -24,33 +27,29 @@ func NewClient(baseURL string) *ClientIn {
 	}
 }
 
-func (c *ClientIn) Login(username, password string) (*models.LoginResponse, error) {
-	payload := map[string]string{
-		"username": username,
-		"password": password,
-	}
-	body, _ := json.Marshal(payload)
+var creds models.Credentials
 
-	req, err := http.NewRequest("POST", fmt.Sprintf("%s/auth/login", c.BaseURL), bytes.NewReader(body))
+func (c *SDKClient) SDKLogin(models.Credentials) (*models.LoginResponse, error) {
+	body, _ := json.Marshal(creds)
+
+	req, err := http.NewRequest("POST", c.BaseURL+"/api/sdk/login", bytes.NewBuffer(body))
 	if err != nil {
 		return nil, err
 	}
 	req.Header.Set("Content-Type", "application/json")
 
-	resp, err := c.HTTPClient.Do(req)
+	res, err := c.HTTPClient.Do(req)
 	if err != nil {
-		return nil, fmt.Errorf("auth service unavailable: %w", err)
+		return nil, err
 	}
-	defer resp.Body.Close()
+	defer res.Body.Close()
 
-	if resp.StatusCode != http.StatusOK {
-		return nil, fmt.Errorf("login failed with status %d", resp.StatusCode)
+	var authResp models.LoginResponse
+	if err := json.NewDecoder(res.Body).Decode(&authResp); err != nil {
+		return nil, err
 	}
+	//dev and testing only
+	fmt.Println("Passed SDKLogin proxy", authResp.Username)
 
-	var loginResp models.LoginResponse
-	if err := json.NewDecoder(resp.Body).Decode(&loginResp); err != nil {
-		return nil, fmt.Errorf("invalid auth response: %w", err)
-	}
-
-	return &loginResp, nil
+	return &authResp, nil
 }
