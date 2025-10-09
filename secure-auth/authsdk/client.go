@@ -7,7 +7,6 @@ import (
 	"net/http"
 	"time"
 
-	"github.com/dvg1130/Portfolio/secure-auth/config"
 	"github.com/dvg1130/Portfolio/secure-auth/models"
 )
 
@@ -31,7 +30,7 @@ var creds models.Credentials
 func (c *SDKClient) SDKLogin(models.Credentials) (*models.LoginResponse, error) {
 	body, _ := json.Marshal(creds)
 
-	req, err := http.NewRequest("POST", config.ProxyConfig.AUTH_LOGIN_ROUTE, bytes.NewBuffer(body))
+	req, err := http.NewRequest("POST", c.BaseURL+"api/sdk/login", bytes.NewBuffer(body))
 	if err != nil {
 		fmt.Println("SDKLogin:", c.BaseURL)
 		return nil, err

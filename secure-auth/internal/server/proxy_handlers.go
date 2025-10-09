@@ -24,6 +24,7 @@ func (s *Server) ProxyLogin(w http.ResponseWriter, r *http.Request) {
 	}
 
 	body, _ := json.Marshal(creds)
+	fmt.Println("proxy login route:", auth_route)
 
 	req, err := http.NewRequest("POST", auth_route, bytes.NewBuffer(body))
 	if err != nil {
