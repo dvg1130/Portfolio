@@ -18,7 +18,7 @@ func InitRoutes_Auth(router *http.ServeMux, h *models.AuthHandlers) {
 	router.HandleFunc("/auth/register", validator.Method(http.MethodPost, h.Register))
 	router.HandleFunc("auth/logout", validator.Method(http.MethodPost, h.Logout))
 	router.HandleFunc("/auth/token/refresh", validator.Method(http.MethodPost, h.TokenRefresh))
-	router.HandleFunc("/", h.Health)
+	router.HandleFunc("/health", h.Health)
 
 }
 
