@@ -30,7 +30,7 @@ var creds models.Credentials
 func (c *SDKClient) SDKLogin(models.Credentials) (*models.LoginResponse, error) {
 	body, _ := json.Marshal(creds)
 
-	req, err := http.NewRequest("POST", c.BaseURL+"/api/sdk/login", bytes.NewBuffer(body))
+	req, err := http.NewRequest("POST", "http:127.0.0.1/api/sdk/login", bytes.NewBuffer(body))
 	if err != nil {
 		fmt.Println("SDKLogin:", c.BaseURL)
 		return nil, err
