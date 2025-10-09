@@ -141,9 +141,10 @@ func (s *Server) Login(w http.ResponseWriter, r *http.Request) {
 
 	//sucessful login
 	json.NewEncoder(w).Encode(map[string]string{
-		"message":   "login successful",
-		"token":     accesstoken,
-		"device_id": deviceid,
+		"message":       "login successful",
+		"token":         accesstoken,
+		"device_id":     deviceid,
+		"refresh_token": refreshToken,
 	})
 
 	logs.LogEvent(s.Logger, "info", "Successful Login", r, map[string]interface{}{
