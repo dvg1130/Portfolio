@@ -59,13 +59,24 @@ func (s *Server) ProxyLogin(w http.ResponseWriter, r *http.Request) {
 	// Ensure Content-Type is JSON
 	w.Header().Set("Content-Type", "application/json")
 
+	// ✅ Repackage response: extract actual fields from upstream JSON
+	var upstreamResp models.LoginResponse
+	if err := json.Unmarshal(resBody, &upstreamResp); err != nil {
+		http.Error(w, "invalid upstream response", http.StatusInternalServerError)
+		return
+	}
+
+	// Inject the username from credentials (if not already set)
+	if upstreamResp.Username == "" {
+		upstreamResp.Username = creds.Username
+	}
+
 	// Write status code
 	w.WriteHeader(res.StatusCode)
 
-	// Write body
-	_, err = w.Write(resBody)
-	if err != nil {
-		fmt.Println("Failed writing response body:", err)
+	// Write JSON body
+	if err := json.NewEncoder(w).Encode(upstreamResp); err != nil {
+		fmt.Println("Failed encoding repackaged response:", err)
 	}
 	defer res.Body.Close()
 }

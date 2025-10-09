@@ -26,7 +26,7 @@ func NewClient(baseURL string) *SDKClient {
 	}
 }
 
-var creds models.Credentials
+// var creds models.Credentials
 
 func (c *SDKClient) SDKLogin(creds models.Credentials) (*models.LoginResponse, error) {
 	// marshal creds into JSON
@@ -62,7 +62,7 @@ func (c *SDKClient) SDKLogin(creds models.Credentials) (*models.LoginResponse, e
 	}
 
 	//  optional debug log
-	fmt.Println("Passed SDKLogin proxy", authResp.Username)
+	fmt.Println("Passed SDKLogin proxy", authResp)
 
 	return &authResp, nil
 }
