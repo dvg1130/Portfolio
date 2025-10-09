@@ -11,5 +11,6 @@ type ProxyConfigStruct struct {
 	BASE_URL         string
 	AUTH_LOGIN_ROUTE string
 	LOGIN_ROUTE      string
+	SDK_LOGIN_ROUTE  string
 	REGUSTER_ROUTE   string
 }

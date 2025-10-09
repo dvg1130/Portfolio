@@ -22,12 +22,12 @@ func (s *Server) ProxyLogin(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, "bad request", http.StatusBadRequest)
 		return
 	}
-	fmt.Println("ProxyLogin ", creds.Username)
 
 	body, _ := json.Marshal(creds)
 
-	req, err := http.NewRequest("POST", config.ProxyConfig.BASE_URL+auth_route, bytes.NewBuffer(body))
+	req, err := http.NewRequest("POST", auth_route, bytes.NewBuffer(body))
 	if err != nil {
+		fmt.Println("proxy login route:", auth_route)
 		http.Error(w, "bad gateway", http.StatusBadGateway)
 		return
 	}
