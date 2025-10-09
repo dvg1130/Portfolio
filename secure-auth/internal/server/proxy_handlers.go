@@ -38,7 +38,6 @@ func (s *Server) ProxyLogin(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, "bad gateway", http.StatusBadGateway)
 		return
 	}
-	defer res.Body.Close()
 
 	// Copy headers
 	for k, v := range res.Header {
@@ -55,4 +54,5 @@ func (s *Server) ProxyLogin(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
 	}
+	defer res.Body.Close()
 }
