@@ -44,6 +44,7 @@ func AppServer(auth_db *sql.DB, logger *zap.SugaredLogger) *Server {
 		Logout:       s.Logout,
 		TokenRefresh: s.TokenRefresh,
 		Logger:       *s.Logger,
+		Health:       s.Health,
 	})
 
 	s.Router = helpers.ServeMuxWrapper(

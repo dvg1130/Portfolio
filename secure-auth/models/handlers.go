@@ -11,6 +11,7 @@ type AuthHandlers struct {
 	Handler      http.HandlerFunc
 	Login        http.HandlerFunc
 	ProxyLogin   http.HandlerFunc
+	Health       http.HandlerFunc
 	Register     http.HandlerFunc
 	Logout       http.HandlerFunc
 	TokenRefresh http.HandlerFunc
