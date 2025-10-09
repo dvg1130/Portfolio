@@ -60,22 +60,24 @@ func (s *Server) ProxyLogin(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "application/json")
 
 	// ✅ Repackage response: extract actual fields from upstream JSON
-	var upstreamResp models.LoginResponse
-	if err := json.Unmarshal(resBody, &upstreamResp); err != nil {
+	var upstreamMap map[string]interface{}
+	if err := json.Unmarshal(resBody, &upstreamMap); err != nil {
 		http.Error(w, "invalid upstream response", http.StatusInternalServerError)
 		return
 	}
 
-	// Inject the username from credentials (if not already set)
-	if upstreamResp.Username == "" {
-		upstreamResp.Username = creds.Username
+	resp := models.LoginResponse{
+		Username:     creds.Username,
+		AccessToken:  fmt.Sprintf("%v", upstreamMap["token"]), // map "token" → AccessToken
+		RefreshToken: fmt.Sprintf("%v", upstreamMap["refresh_token"]),
+		DeviceID:     fmt.Sprintf("%v", upstreamMap["device_id"]),
 	}
 
 	// Write status code
 	w.WriteHeader(res.StatusCode)
 
 	// Write JSON body
-	if err := json.NewEncoder(w).Encode(upstreamResp); err != nil {
+	if err := json.NewEncoder(w).Encode(resp); err != nil {
 		fmt.Println("Failed encoding repackaged response:", err)
 	}
 	defer res.Body.Close()
