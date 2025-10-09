@@ -65,12 +65,23 @@ func (s *Server) ProxyLogin(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, "invalid upstream response", http.StatusInternalServerError)
 		return
 	}
+	type UpstreamLoginResponse struct {
+		DeviceID     string `json:"device_id"`
+		Message      string `json:"message"`
+		AccessToken  string `json:"token"`         // upstream calls it "token"
+		RefreshToken string `json:"refresh_token"` // only if upstream returns it
+	}
+	var upstreamResp UpstreamLoginResponse
+	if err := json.Unmarshal(resBody, &upstreamResp); err != nil {
+		http.Error(w, "invalid upstream response", http.StatusInternalServerError)
+		return
+	}
 
 	resp := models.LoginResponse{
-		Username:     creds.Username,
-		AccessToken:  fmt.Sprintf("%v", upstreamMap["token"]), // map "token" → AccessToken
-		RefreshToken: fmt.Sprintf("%v", upstreamMap["refresh_token"]),
-		DeviceID:     fmt.Sprintf("%v", upstreamMap["device_id"]),
+		Username:     creds.Username,            // inject username from request
+		AccessToken:  upstreamResp.AccessToken,  // real token from upstream
+		RefreshToken: upstreamResp.RefreshToken, // real refresh token from upstream
+		DeviceID:     upstreamResp.DeviceID,
 	}
 
 	// Write status code
