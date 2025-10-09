@@ -8,7 +8,8 @@ type AuthConfigStruct struct {
 	REDIS_ADDR     string
 }
 type ProxyConfigStruct struct {
-	BASE_URL       string
-	LOGIN_ROUTE    string
-	REGUSTER_ROUTE string
+	BASE_URL         string
+	AUTH_LOGIN_ROUTE string
+	LOGIN_ROUTE      string
+	REGUSTER_ROUTE   string
 }

@@ -29,7 +29,8 @@ func init() {
 	}
 
 	ProxyConfig = models.ProxyConfigStruct{
-		BASE_URL: os.Getenv("BASE_URL"),
+		BASE_URL:         os.Getenv("BASE_URL"),
+		AUTH_LOGIN_ROUTE: os.Getenv("AUTH_LOGIN_URL"),
 	}
 
 }

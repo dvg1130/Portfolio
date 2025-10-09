@@ -15,6 +15,7 @@ import (
 func (s *Server) ProxyLogin(w http.ResponseWriter, r *http.Request) {
 	internal := authsdk.NewClient()
 	internal.BaseURL = config.ProxyConfig.BASE_URL
+	var auth_route = config.ProxyConfig.AUTH_LOGIN_ROUTE
 
 	var creds models.Credentials
 	if err := json.NewDecoder(r.Body).Decode(&creds); err != nil {
@@ -25,7 +26,7 @@ func (s *Server) ProxyLogin(w http.ResponseWriter, r *http.Request) {
 
 	body, _ := json.Marshal(creds)
 
-	req, err := http.NewRequest("POST", internal.BaseURL+"/api/auth/login", bytes.NewBuffer(body))
+	req, err := http.NewRequest("POST", internal.BaseURL+auth_route, bytes.NewBuffer(body))
 	if err != nil {
 		http.Error(w, "bad gateway", http.StatusBadGateway)
 		return

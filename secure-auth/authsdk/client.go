@@ -34,6 +34,7 @@ func (c *SDKClient) SDKLogin(models.Credentials) (*models.LoginResponse, error) 
 
 	req, err := http.NewRequest("POST", c.BaseURL+"/api/sdk/login", bytes.NewBuffer(body))
 	if err != nil {
+		fmt.Println("SDKLogin:", c.BaseURL)
 		return nil, err
 	}
 	req.Header.Set("Content-Type", "application/json")
