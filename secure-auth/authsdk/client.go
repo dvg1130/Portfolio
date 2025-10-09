@@ -7,7 +7,6 @@ import (
 	"net/http"
 	"time"
 
-	"github.com/dvg1130/Portfolio/secure-auth/config"
 	"github.com/dvg1130/Portfolio/secure-auth/models"
 )
 
@@ -16,8 +15,7 @@ type SDKClient struct {
 	HTTPClient *http.Client
 }
 
-func NewClient() *SDKClient {
-	var baseURL = config.ProxyConfig.BASE_URL
+func NewClient(baseURL string) *SDKClient {
 
 	return &SDKClient{
 		BaseURL: baseURL,
