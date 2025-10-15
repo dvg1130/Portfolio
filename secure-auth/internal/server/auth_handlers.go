@@ -111,7 +111,7 @@ func (s *Server) Login(w http.ResponseWriter, r *http.Request) {
 	}
 	fmt.Println("access token from auth_handler", accesstoken)
 	fmt.Println("refresh token from auth_handler", refreshToken)
-	//store refresh toekn and device_id in redis
+	//store refresh token and device_id in redis
 	session := models.RefreshSession{
 		RefreshToken: refreshToken,
 		DeviceID:     deviceid,
@@ -140,11 +140,12 @@ func (s *Server) Login(w http.ResponseWriter, r *http.Request) {
 	})
 
 	//sucessful login
-	json.NewEncoder(w).Encode(map[string]string{
+	json.NewEncoder(w).Encode(map[string]interface{}{
 		"message":       "login successful",
 		"token":         accesstoken,
 		"device_id":     deviceid,
 		"refresh_token": refreshToken,
+		"expires":       exp,
 	})
 
 	logs.LogEvent(s.Logger, "info", "Successful Login", r, map[string]interface{}{

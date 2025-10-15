@@ -42,10 +42,11 @@ var RoleUpdate struct {
 // }
 
 type LoginResponse struct {
-	Username     string `json:"username"`
-	AccessToken  string `json:"access_token,omitempty"`
-	RefreshToken string `json:"refresh_token,omitempty"`
-	DeviceID     string `json:"device_id,omitempty"`
+	Username     string    `json:"username"`
+	AccessToken  string    `json:"access_token,omitempty"`
+	RefreshToken string    `json:"refresh_token,omitempty"`
+	DeviceID     string    `json:"device_id,omitempty"`
+	Expires      time.Time `json:"expires"`
 }
 
 type Client struct {
