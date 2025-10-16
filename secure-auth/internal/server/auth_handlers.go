@@ -111,6 +111,7 @@ func (s *Server) Login(w http.ResponseWriter, r *http.Request) {
 	}
 	fmt.Println("access token from auth_handler", accesstoken)
 	fmt.Println("refresh token from auth_handler", refreshToken)
+
 	//store refresh token and device_id in redis
 	session := models.RefreshSession{
 		RefreshToken: refreshToken,
@@ -369,12 +370,13 @@ func (s *Server) TokenRefresh(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, "invalid or expired refresh token", http.StatusUnauthorized)
 		return
 	}
-
+	exp := time.Now().Add(7 * 24 * time.Hour)
 	// set new refresh token cookie
 	http.SetCookie(w, &http.Cookie{
-		Name:     "refresh_token",
-		Value:    newRefreshToken,
-		Expires:  time.Now().Add(7 * 24 * time.Hour),
+		Name:  "refresh_token",
+		Value: newRefreshToken,
+		// Expires:  time.Now().Add(7 * 24 * time.Hour),
+		Expires:  exp,
 		HttpOnly: true,
 		Secure:   true,
 		Path:     "/api/auth/token/refresh",
@@ -382,10 +384,17 @@ func (s *Server) TokenRefresh(w http.ResponseWriter, r *http.Request) {
 	})
 
 	// return new access tokenls
-	json.NewEncoder(w).Encode(map[string]string{
+	// json.NewEncoder(w).Encode(map[string]string{
+
+	// 	"access_token": newAccessToken,
+	// 	"device_id":    device_id,
+	// 	"expires": exp,
+	// })
+	json.NewEncoder(w).Encode(map[string]interface{}{
 
 		"access_token": newAccessToken,
 		"device_id":    device_id,
+		"expires":      exp,
 	})
 
 	fmt.Println("new refresh token: ", newRefreshToken)
