@@ -12,31 +12,31 @@ import (
 	"github.com/dvg1130/Portfolio/secure-auth/models"
 )
 
-func (s *Server) ProxyLogin(w http.ResponseWriter, r *http.Request) {
+func (s *Server) ProxyLogout(w http.ResponseWriter, r *http.Request) {
 	internal := authsdk.NewClient(config.ProxyConfig.BASE_URL)
 
-	var auth_route = config.ProxyConfig.AUTH_LOGIN_ROUTE
+	var logout_route = config.ProxyConfig.AUTH_LOGOUT_ROUTE
+	fmt.Println("route:", logout_route)
 
-	var creds models.Credentials
-	if err := json.NewDecoder(r.Body).Decode(&creds); err != nil {
-		http.Error(w, "bad request", http.StatusBadRequest)
+	var logoutReq models.LogoutRequest
+	if err := json.NewDecoder(r.Body).Decode(&logoutReq); err != nil {
+		http.Error(w, "invalid request body", http.StatusBadRequest)
 		return
 	}
 
-	body, _ := json.Marshal(creds)
-	fmt.Println("proxy login route:", auth_route)
+	body, _ := json.Marshal(logoutReq)
 
-	req, err := http.NewRequest("POST", auth_route, bytes.NewBuffer(body))
+	req, err := http.NewRequest("POST", logout_route, bytes.NewBuffer(body))
 	if err != nil {
-		fmt.Println("proxy login route:", auth_route)
-		http.Error(w, "bad gateway", http.StatusBadGateway)
+		fmt.Println("proxy login route:", logout_route)
+		http.Error(w, "bad gateway1", http.StatusBadGateway)
 		return
 	}
 	req.Header = r.Header.Clone()
 
 	res, err := internal.HTTPClient.Do(req)
 	if err != nil {
-		http.Error(w, "bad gateway", http.StatusBadGateway)
+		http.Error(w, "bad gateway2", http.StatusBadGateway)
 		return
 	}
 
@@ -45,7 +45,6 @@ func (s *Server) ProxyLogin(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, "failed to read upstream response", http.StatusInternalServerError)
 		return
 	}
-
 	// Copy headers except Content-Length
 	for k, v := range res.Header {
 		if k == "Content-Length" || k == "Transfer-Encoding" {
@@ -59,29 +58,25 @@ func (s *Server) ProxyLogin(w http.ResponseWriter, r *http.Request) {
 	// Ensure Content-Type is JSON
 	w.Header().Set("Content-Type", "application/json")
 
-	// ✅ Repackage response: extract actual fields from upstream JSON
+	// Repackage response: extract actual fields from upstream JSON
 	var upstreamMap map[string]interface{}
 	if err := json.Unmarshal(resBody, &upstreamMap); err != nil {
-		http.Error(w, "invalid upstream response", http.StatusInternalServerError)
+		http.Error(w, "invalid upstream response 1", http.StatusInternalServerError)
 		return
 	}
 	type UpstreamLoginResponse struct {
-		DeviceID     string `json:"device_id"`
-		Message      string `json:"message"`
-		AccessToken  string `json:"token"`         // upstream calls it "token"
-		RefreshToken string `json:"refresh_token"` // only if upstream returns it
+		// upstream calls it "token"
+		Message string `json:"message"` // only if upstream returns it
 	}
 	var upstreamResp UpstreamLoginResponse
 	if err := json.Unmarshal(resBody, &upstreamResp); err != nil {
-		http.Error(w, "invalid upstream response", http.StatusInternalServerError)
+		http.Error(w, "invalid upstream response 2", http.StatusInternalServerError)
 		return
 	}
 
-	resp := models.LoginResponse{
-		Username:     creds.Username,            // inject username from request
-		AccessToken:  upstreamResp.AccessToken,  // real token from upstream
-		RefreshToken: upstreamResp.RefreshToken, // real refresh token from upstream
-		DeviceID:     upstreamResp.DeviceID,
+	resp := models.LogoutResponse{
+		// real token from upstream
+		Message: upstreamResp.Message,
 	}
 
 	// Write status code

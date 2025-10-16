@@ -16,12 +16,6 @@ import (
 	authdb "github.com/dvg1130/Portfolio/secure-auth/repo/auth_db"
 )
 
-// entry
-func (s *Server) Handler(w http.ResponseWriter, r *http.Request) {
-	w.Write([]byte("successful connection to server"))
-
-}
-
 // login
 func (s *Server) Login(w http.ResponseWriter, r *http.Request) {
 	//requestid
@@ -116,7 +110,6 @@ func (s *Server) Login(w http.ResponseWriter, r *http.Request) {
 	session := models.RefreshSession{
 		RefreshToken: refreshToken,
 		DeviceID:     deviceid,
-		ExpiresAt:    exp,
 	}
 
 	sessionJSON, _ := json.Marshal(session)
@@ -146,7 +139,6 @@ func (s *Server) Login(w http.ResponseWriter, r *http.Request) {
 		"token":         accesstoken,
 		"device_id":     deviceid,
 		"refresh_token": refreshToken,
-		"expires":       exp,
 	})
 
 	logs.LogEvent(s.Logger, "info", "Successful Login", r, map[string]interface{}{
@@ -176,15 +168,15 @@ func (s *Server) trackFailedAttempt(ctx context.Context, ip string) {
 // register
 func (s *Server) Register(w http.ResponseWriter, r *http.Request) {
 
-	type contextKey string
+	// type contextKey string
 
-	const RequestIDKey contextKey = "requestID"
-	claims := auth.GetClaimsFromContext(r.Context())
-	requestID := r.Context().Value(RequestIDKey).(string)
-	if claims != nil {
-		requestID = claims["request_id"].(string)
+	// const RequestIDKey contextKey = "requestID"
+	// claims := auth.GetClaimsFromContext(r.Context())
+	// requestID := r.Context().Value(RequestIDKey).(string)
+	// if claims != nil {
+	// 	requestID = claims["request_id"].(string)
 
-	}
+	// }
 
 	//decode body
 	req, err := helpers.DecodeBody[models.Credentials](w, r)
@@ -225,25 +217,24 @@ func (s *Server) Register(w http.ResponseWriter, r *http.Request) {
 
 	//successfull registration
 	w.WriteHeader(http.StatusAccepted)
-	w.Write([]byte("User registered successfully"))
+	json.NewEncoder(w).Encode(map[string]interface{}{
+		"message": "User registered successfully",
+	})
+
 	logs.LogEvent(s.Logger, "info", "Successful Registration", r, map[string]interface{}{
 		"path":       r.URL.Path,
 		"user_agent": r.UserAgent(),
 		"username":   req.Username,
 		"category":   "auth",
 		"action":     "user registeration",
-		"request_id": requestID,
+		// "request_id": requestID,
 	})
 }
 
 // logout
 func (s *Server) Logout(w http.ResponseWriter, r *http.Request) {
 
-	type LogoutRequest struct {
-		RefreshToken string `json:"refresh_token"`
-	}
-
-	var req LogoutRequest
+	var req models.LogoutRequest
 	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
 		http.Error(w, "invalid request body", http.StatusBadRequest)
 		return
@@ -252,13 +243,41 @@ func (s *Server) Logout(w http.ResponseWriter, r *http.Request) {
 	type contextKey string
 
 	const RequestIDKey contextKey = "requestID"
-	// var uuid string
-	claim := auth.GetClaimsFromContext(r.Context())
-	requestID := r.Context().Value(RequestIDKey).(string)
-	uuid := r.Context().Value("uuid").(string)
-	if claim != nil {
-		requestID = claim["request_id"].(string)
-		uuid = claim["uuid"].(string)
+
+	var requestID, uuid string
+
+	if val := r.Context().Value(RequestIDKey); val != nil {
+		if str, ok := val.(string); ok {
+			requestID = str
+		}
+	}
+
+	if val := r.Context().Value("uuid"); val != nil {
+		if str, ok := val.(string); ok {
+			uuid = str
+		}
+	}
+
+	if claim := auth.GetClaimsFromContext(r.Context()); claim != nil {
+		if str, ok := claim["request_id"].(string); ok {
+			requestID = str
+		}
+		if str, ok := claim["uuid"].(string); ok {
+			uuid = str
+		}
+	}
+
+	// requestID, _ := r.Context().Value(middleware.RequestIDKey).(string)
+	if requestID == "" {
+		// Fallback to header if context is missing it
+		requestID = r.Header.Get("X-Request-ID")
+	}
+
+	claims := auth.GetClaimsFromContext(r.Context())
+	if claims != nil {
+		if rid, ok := claims["request_id"].(string); ok && rid != "" {
+			requestID = rid
+		}
 	}
 
 	// verify/parse the refresh token to extract username
@@ -284,7 +303,12 @@ func (s *Server) Logout(w http.ResponseWriter, r *http.Request) {
 	fmt.Println("Deleted keys:", deleted)
 
 	w.WriteHeader(http.StatusOK)
-	w.Write([]byte("Refresh Token successfully"))
+	//successfull registration
+
+	json.NewEncoder(w).Encode(map[string]interface{}{
+		"message": "User logout successfully",
+	})
+
 	logs.LogEvent(s.Logger, "info", "Successful Token Refesh", r, map[string]interface{}{
 		"uuid":       uuid,
 		"username":   username,
@@ -384,17 +408,10 @@ func (s *Server) TokenRefresh(w http.ResponseWriter, r *http.Request) {
 	})
 
 	// return new access tokenls
-	// json.NewEncoder(w).Encode(map[string]string{
-
-	// 	"access_token": newAccessToken,
-	// 	"device_id":    device_id,
-	// 	"expires": exp,
-	// })
-	json.NewEncoder(w).Encode(map[string]interface{}{
+	json.NewEncoder(w).Encode(map[string]string{
 
 		"access_token": newAccessToken,
 		"device_id":    device_id,
-		"expires":      exp,
 	})
 
 	fmt.Println("new refresh token: ", newRefreshToken)

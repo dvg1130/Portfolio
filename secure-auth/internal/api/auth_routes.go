@@ -15,14 +15,16 @@ func InitRoutes_Auth(router *http.ServeMux, h *models.AuthHandlers) {
 			validator.Method(http.MethodPost,
 				http.HandlerFunc(h.Login),
 			)))
-	router.HandleFunc("/auth/register", validator.Method(http.MethodPost, h.Register))
-	router.HandleFunc("auth/logout", validator.Method(http.MethodPost, h.Logout))
+	router.HandleFunc("/api/auth/register", validator.Method(http.MethodPost, h.Register))
+	router.HandleFunc("/api/auth/logout", validator.Method(http.MethodPost, h.Logout))
 	router.HandleFunc("/auth/token/refresh", validator.Method(http.MethodPost, h.TokenRefresh))
 	router.HandleFunc("/health", h.Health)
 
 }
 
-func InitRoutes_Proxy(router *http.ServeMux, h *models.AuthHandlers) { // Internal only
+func InitRoutes_Proxy(router *http.ServeMux, h *models.ProxyHandlers) { // Internal only
 	router.HandleFunc("/api/sdk/login", h.ProxyLogin)
+	router.HandleFunc("/api/sdk/register", h.ProxyRegister)
+	router.HandleFunc("/api/sdk/logout", h.ProxyLogout)
 
 }

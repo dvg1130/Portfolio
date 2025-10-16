@@ -29,9 +29,16 @@ func init() {
 	}
 
 	ProxyConfig = models.ProxyConfigStruct{
-		BASE_URL:         os.Getenv("BASE_URL"),
+		BASE_URL: os.Getenv("BASE_URL"),
+
 		AUTH_LOGIN_ROUTE: os.Getenv("AUTH_LOGIN_ROUTE"),
 		SDK_LOGIN_ROUTE:  os.Getenv("SDK_LOGIN_ROUTE"),
+
+		AUTH_REGISTER_ROUTE: os.Getenv("AUTH_REGISTER_ROUTE"),
+		SDK_REGISTER_ROUTE:  os.Getenv("SDK_REGISTER_ROUTE"),
+
+		AUTH_LOGOUT_ROUTE: os.Getenv("AUTH_LOGOUT_ROUTE"),
+		SDK_LOGOUT_ROUTE:  os.Getenv("SDK_LOGOUT_ROUTE"),
 	}
 
 }

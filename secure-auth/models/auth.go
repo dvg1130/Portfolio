@@ -32,21 +32,22 @@ var RoleUpdate struct {
 	NewRole  string `json:"new_role"`
 }
 
-// type LoginResponse struct {
-// 	AccessToken  string `json:"access_token"`
-// 	RefreshToken string `json:"refresh_token"`
-// 	ExpiresIn    int64  `json:"expires_in"`
-// 	Username       string `json:"username"`
-// 	DeviceID     string `json:"device_id"`
-
-// }
-
 type LoginResponse struct {
-	Username     string    `json:"username"`
-	AccessToken  string    `json:"access_token,omitempty"`
-	RefreshToken string    `json:"refresh_token,omitempty"`
-	DeviceID     string    `json:"device_id,omitempty"`
-	Expires      time.Time `json:"expires"`
+	Username     string `json:"username"`
+	AccessToken  string `json:"access_token,omitempty"`
+	RefreshToken string `json:"refresh_token,omitempty"`
+	DeviceID     string `json:"device_id,omitempty"`
+}
+
+type ResigterResponse struct {
+	Message string `json:"messsage,omitempty"`
+}
+
+type LogoutRequest struct {
+	RefreshToken string `json:"refresh_token"`
+}
+type LogoutResponse struct {
+	Message string `json:"messsage,omitempty"`
 }
 
 type Client struct {
