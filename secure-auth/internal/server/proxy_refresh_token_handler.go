@@ -50,17 +50,18 @@ func (s *Server) ProxyRefreshToken(w http.ResponseWriter, r *http.Request) {
 	resBody, err := io.ReadAll(res.Body)
 	if err != nil {
 		http.Error(w, "failed to read upstream response", http.StatusInternalServerError)
+
 		return
 	}
-	// // Copy headers except Content-Length
-	// for k, v := range res.Header {
-	// 	if k == "Content-Length" || k == "Transfer-Encoding" {
-	// 		continue
-	// 	}
-	// 	for _, vv := range v {
-	// 		w.Header().Add(k, vv)
-	// 	}
-	// }
+	// Copy headers except Content-Length
+	for k, v := range res.Header {
+		if k == "Content-Length" || k == "Transfer-Encoding" {
+			continue
+		}
+		for _, vv := range v {
+			w.Header().Add(k, vv)
+		}
+	}
 
 	// Ensure Content-Type is JSON
 	w.Header().Set("Content-Type", "application/json")

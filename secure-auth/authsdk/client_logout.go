@@ -20,6 +20,7 @@ func (c *SDKClient) SDKLogout(logout models.LogoutRequest) (*models.LogoutRespon
 	// build the request
 	url := "http://127.0.0.1:8080/api/sdk/logout"
 	req, err := http.NewRequest("POST", url, bytes.NewBuffer(bodyBytes))
+	req.Header.Set("Authorization", "Bearer "+logout.AccessToken)
 	if err != nil {
 		return nil, fmt.Errorf("failed to create request to %s: %w", url, err)
 	}

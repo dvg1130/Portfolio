@@ -65,11 +65,11 @@ func (s *Server) ProxyLogout(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, "invalid upstream response 1", http.StatusInternalServerError)
 		return
 	}
-	type UpstreamLoginResponse struct {
+	type UpstreamLogoutResponse struct {
 		// upstream calls it "token"
 		Message string `json:"message"` // only if upstream returns it
 	}
-	var upstreamResp UpstreamLoginResponse
+	var upstreamResp UpstreamLogoutResponse
 	if err := json.Unmarshal(resBody, &upstreamResp); err != nil {
 		http.Error(w, "invalid upstream response 2", http.StatusInternalServerError)
 		return
