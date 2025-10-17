@@ -10,7 +10,6 @@ import (
 	"github.com/dvg1130/Portfolio/secure-auth/internal/auth"
 	"github.com/dvg1130/Portfolio/secure-auth/internal/helpers"
 	"github.com/dvg1130/Portfolio/secure-auth/internal/middleware"
-	validator "github.com/dvg1130/Portfolio/secure-auth/internal/validator/auth"
 	"github.com/dvg1130/Portfolio/secure-auth/logs"
 	"github.com/dvg1130/Portfolio/secure-auth/models"
 	authdb "github.com/dvg1130/Portfolio/secure-auth/repo/auth_db"
@@ -110,6 +109,7 @@ func (s *Server) Login(w http.ResponseWriter, r *http.Request) {
 	session := models.RefreshSession{
 		RefreshToken: refreshToken,
 		DeviceID:     deviceid,
+		ExpiresAt:    exp,
 	}
 
 	sessionJSON, _ := json.Marshal(session)
@@ -139,6 +139,7 @@ func (s *Server) Login(w http.ResponseWriter, r *http.Request) {
 		"token":         accesstoken,
 		"device_id":     deviceid,
 		"refresh_token": refreshToken,
+		"expires":       exp,
 	})
 
 	logs.LogEvent(s.Logger, "info", "Successful Login", r, map[string]interface{}{
@@ -163,212 +164,4 @@ func (s *Server) trackFailedAttempt(ctx context.Context, ip string) {
 		s.Redis.Set(ctx, "lockout:"+ip, true, time.Hour)
 		s.Redis.Del(ctx, key)
 	}
-}
-
-// register
-func (s *Server) Register(w http.ResponseWriter, r *http.Request) {
-
-	// type contextKey string
-
-	// const RequestIDKey contextKey = "requestID"
-	// claims := auth.GetClaimsFromContext(r.Context())
-	// requestID := r.Context().Value(RequestIDKey).(string)
-	// if claims != nil {
-	// 	requestID = claims["request_id"].(string)
-
-	// }
-
-	//decode body
-	req, err := helpers.DecodeBody[models.Credentials](w, r)
-	if err != nil {
-		return
-	}
-
-	//len check
-	if err := validator.AuthLenCheck(req.Username, req.Password); err != nil {
-		http.Error(w, err.Error(), http.StatusNotAcceptable)
-		return
-	}
-
-	// existing username check
-	exists, err := validator.ExistingUser(s.AUTH_DB, req.Username)
-	if err != nil {
-		http.Error(w, "server error", http.StatusInternalServerError)
-		return
-	}
-	if exists {
-		http.Error(w, "user already exists", http.StatusConflict)
-		return
-	}
-
-	//hash pw
-	hashedPW, err := auth.HashPW(req.Password)
-	if err != nil {
-		http.Error(w, "error hashing password", http.StatusInternalServerError)
-		return
-	}
-
-	//db insert
-	_, err = s.AUTH_DB.Exec(authdb.RegisterUser, req.Username, hashedPW)
-	if err != nil {
-		http.Error(w, "error creating user", http.StatusInternalServerError)
-		return
-	}
-
-	//successfull registration
-	w.WriteHeader(http.StatusAccepted)
-	json.NewEncoder(w).Encode(map[string]interface{}{
-		"message": "User registered successfully",
-	})
-
-	logs.LogEvent(s.Logger, "info", "Successful Registration", r, map[string]interface{}{
-		"path":       r.URL.Path,
-		"user_agent": r.UserAgent(),
-		"username":   req.Username,
-		"category":   "auth",
-		"action":     "user registeration",
-		// "request_id": requestID,
-	})
-}
-
-// logout
-func (s *Server) Logout(w http.ResponseWriter, r *http.Request) {
-
-	var req models.LogoutRequest
-	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
-		http.Error(w, "invalid request body", http.StatusBadRequest)
-		return
-	}
-
-	var uuid string
-
-	claims, err := auth.VerifyToken(req.RefreshToken)
-	if err != nil {
-		http.Error(w, "invalid token", http.StatusUnauthorized)
-		return
-	}
-	// fmt.Println("claims: ", claims)
-
-	username, ok := claims["sub"].(string)
-	if !ok {
-		http.Error(w, "invalid token claims", http.StatusUnauthorized)
-		return
-	}
-	// ctx := r.Context()
-	ctx := auth.AddClaimsToContext(r.Context(), claims)
-	r = r.WithContext(ctx)
-	// fmt.Println("claims: ", r)
-
-	// delete session from Redis
-	key := fmt.Sprintf("refresh:%s", username)
-	deleted, _ := s.Redis.Del(r.Context(), key).Result()
-	fmt.Println("Deleted keys:", deleted)
-
-	w.WriteHeader(http.StatusOK)
-	//successfull registration
-
-	json.NewEncoder(w).Encode(map[string]interface{}{
-		"message": "User logout successfully",
-	})
-
-	logs.LogEvent(s.Logger, "info", "Successful Logout", r, map[string]interface{}{
-		"uuid":     uuid,
-		"username": username,
-		"category": "auth",
-		"action":   "token refresh",
-		// "request_id": requestID,
-	})
-}
-
-// refresh token
-func (s *Server) TokenRefresh(w http.ResponseWriter, r *http.Request) {
-	ctx := r.Context()
-	//move to snake app
-	// extract refresh token from cookie
-	// cookie, err := r.Cookie("refresh_token")
-
-	// if err != nil {
-	// 	http.Error(w, "missing refresh token", http.StatusUnauthorized)
-	// 	return
-	// }
-
-	// fmt.Println("Incoming refresh token:", cookie.Value)
-
-	// Parse JSON body
-	var req models.RefreshRequest
-	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
-		http.Error(w, "invalid request body", http.StatusBadRequest)
-		return
-	}
-
-	// Verify refresh token (can be expired or validly signed)
-	claims, err := auth.VerifyToken(req.RefreshToken)
-	if err != nil && err.Error() != "expired token" {
-		http.Error(w, "invalid token handler", http.StatusUnauthorized)
-		fmt.Println(req.RefreshToken)
-
-		return
-	}
-	uuid := claims["uuid"].(string)
-	username := claims["sub"].(string)
-	key := fmt.Sprintf("refresh:%s", username)
-
-	// Load stored session from Redis
-	sessionJSON, err := s.Redis.Get(ctx, key).Result()
-	if err != nil {
-		http.Error(w, "no session found", http.StatusUnauthorized)
-		return
-	}
-
-	var session models.RefreshSession
-
-	if err := json.Unmarshal([]byte(sessionJSON), &session); err != nil {
-		http.Error(w, "invalid session format", http.StatusUnauthorized)
-		return
-	}
-
-	// Device ID check
-	if session.DeviceID != req.DeviceID {
-		http.Error(w, "device mismatch", http.StatusUnauthorized)
-		return
-	}
-
-	// rotate logic
-	newAccessToken, newRefreshToken, device_id, err := auth.RotateRefreshToken(ctx, s.Redis, req.RefreshToken)
-
-	if err != nil {
-		http.Error(w, "invalid or expired refresh token", http.StatusUnauthorized)
-		return
-	}
-	exp := time.Now().Add(7 * 24 * time.Hour)
-	// set new refresh token cookie
-	http.SetCookie(w, &http.Cookie{
-		Name:  "refresh_token",
-		Value: newRefreshToken,
-		// Expires:  time.Now().Add(7 * 24 * time.Hour),
-		Expires:  exp,
-		HttpOnly: true,
-		Secure:   true,
-		Path:     "/api/auth/token/refresh",
-		SameSite: http.SameSiteStrictMode,
-	})
-
-	// return new atokens
-	json.NewEncoder(w).Encode(map[string]interface{}{
-
-		"access_token":  newAccessToken,
-		"refresh_token": newRefreshToken,
-		"device_id":     device_id,
-		"expires":       exp,
-	})
-
-	fmt.Println("new refresh token: ", newRefreshToken)
-	logs.LogEvent(s.Logger, "info", "Successful token refresh", r, map[string]interface{}{
-		"uuid":     uuid,
-		"username": username,
-		"category": "auth",
-		"action":   "user logout",
-		// "request_id": requestID,
-	})
-
 }

@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"io"
 	"net/http"
+	"time"
 
 	"github.com/dvg1130/Portfolio/secure-auth/authsdk"
 	"github.com/dvg1130/Portfolio/secure-auth/config"
@@ -65,10 +66,11 @@ func (s *Server) ProxyLogin(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	type UpstreamLoginResponse struct {
-		DeviceID     string `json:"device_id"`
-		Message      string `json:"message"`
-		AccessToken  string `json:"token"`         // upstream calls it "token"
-		RefreshToken string `json:"refresh_token"` // only if upstream returns it
+		DeviceID     string    `json:"device_id"`
+		Message      string    `json:"message"`
+		AccessToken  string    `json:"token"` // upstream calls it "token"
+		RefreshToken string    `json:"refresh_token"`
+		Expires      time.Time `json:"expires"` // only if upstream returns it
 	}
 	var upstreamResp UpstreamLoginResponse
 	if err := json.Unmarshal(resBody, &upstreamResp); err != nil {
@@ -81,6 +83,7 @@ func (s *Server) ProxyLogin(w http.ResponseWriter, r *http.Request) {
 		AccessToken:  upstreamResp.AccessToken,  // real token from upstream
 		RefreshToken: upstreamResp.RefreshToken, // real refresh token from upstream
 		DeviceID:     upstreamResp.DeviceID,
+		Expires:      upstreamResp.Expires,
 	}
 
 	// Write status code
