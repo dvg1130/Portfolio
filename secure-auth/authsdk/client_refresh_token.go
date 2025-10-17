@@ -18,8 +18,11 @@ func (c *SDKClient) SDKRefreshToken(refresh models.RefreshRequest) (*models.Refr
 	}
 
 	// build the request
+
 	url := "http://127.0.0.1:8080/api/sdk/token/refresh"
 	req, err := http.NewRequest("POST", url, bytes.NewBuffer(bodyBytes))
+	req.Header.Set("Authorization", "Bearer "+refresh.AccessToken)
+	fmt.Println("passed token: ", refresh.AccessToken)
 	if err != nil {
 		return nil, fmt.Errorf("failed to create request to %s: %w", url, err)
 	}
