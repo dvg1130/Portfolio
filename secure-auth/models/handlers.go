@@ -19,7 +19,8 @@ type AuthHandlers struct {
 type ProxyHandlers struct {
 	//auth
 
-	ProxyLogin    http.HandlerFunc
-	ProxyRegister http.HandlerFunc
-	ProxyLogout   http.HandlerFunc
+	ProxyLogin        http.HandlerFunc
+	ProxyRegister     http.HandlerFunc
+	ProxyLogout       http.HandlerFunc
+	ProxyRefreshToken http.HandlerFunc
 }

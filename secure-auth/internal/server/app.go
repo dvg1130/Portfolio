@@ -33,9 +33,10 @@ func AppServer(auth_db *sql.DB, logger *zap.SugaredLogger) *Server {
 	}
 
 	api.InitRoutes_Proxy(s.Router, &models.ProxyHandlers{
-		ProxyLogin:    s.ProxyLogin,
-		ProxyRegister: s.ProxyRegister,
-		ProxyLogout:   s.ProxyLogout,
+		ProxyLogin:        s.ProxyLogin,
+		ProxyRegister:     s.ProxyRegister,
+		ProxyLogout:       s.ProxyLogout,
+		ProxyRefreshToken: s.ProxyRefreshToken,
 	})
 
 	api.InitRoutes_Auth(s.Router, &models.AuthHandlers{

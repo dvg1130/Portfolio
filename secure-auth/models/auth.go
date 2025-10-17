@@ -39,7 +39,7 @@ type LoginResponse struct {
 	DeviceID     string `json:"device_id,omitempty"`
 }
 
-type ResigterResponse struct {
+type RegisterResponse struct {
 	Message string `json:"messsage,omitempty"`
 }
 
@@ -48,6 +48,17 @@ type LogoutRequest struct {
 }
 type LogoutResponse struct {
 	Message string `json:"messsage,omitempty"`
+}
+
+type RefreshRequest struct {
+	RefreshToken string `json:"refresh_token"`
+	DeviceID     string `json:"device_id"`
+}
+type RefreshResponse struct {
+	AccessToken  string    `json:"access_token"`
+	RefreshToken string    `json:"refresh_token"`
+	DeviceID     string    `json:"device_id"`
+	Expires      time.Time `json:"expires"`
 }
 
 type Client struct {

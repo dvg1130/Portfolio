@@ -76,7 +76,7 @@ func (s *Server) ProxyRegister(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	resp := models.ResigterResponse{
+	resp := models.RegisterResponse{
 		// inject username from request
 		Message: upstreamResp.Message, // real token from upstream
 

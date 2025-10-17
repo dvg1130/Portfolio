@@ -18,4 +18,7 @@ type ProxyConfigStruct struct {
 
 	AUTH_LOGOUT_ROUTE string
 	SDK_LOGOUT_ROUTE  string
+
+	AUTH_REFRESH_TOKEN_ROUTE string
+	SDK_REFRESH_TOKEN_ROUTE  string
 }

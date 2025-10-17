@@ -6,33 +6,39 @@ import (
 	"fmt"
 	"io"
 	"net/http"
+	"time"
 
 	"github.com/dvg1130/Portfolio/secure-auth/authsdk"
 	"github.com/dvg1130/Portfolio/secure-auth/config"
 	"github.com/dvg1130/Portfolio/secure-auth/models"
 )
 
-func (s *Server) ProxyLogout(w http.ResponseWriter, r *http.Request) {
+func (s *Server) ProxyRefreshToken(w http.ResponseWriter, r *http.Request) {
 
+	//new client
 	internal := authsdk.NewClient(config.ProxyConfig.BASE_URL)
 
-	var logout_route = config.ProxyConfig.AUTH_LOGOUT_ROUTE
-	fmt.Println("route:", logout_route)
+	//pass route
+	var refreshtoken_route = config.ProxyConfig.AUTH_REFRESH_TOKEN_ROUTE
+	fmt.Println("refresh token route: ", refreshtoken_route)
 
-	var logoutReq models.LogoutRequest
-	if err := json.NewDecoder(r.Body).Decode(&logoutReq); err != nil {
+	//decode body json
+	var refreshReq models.RefreshRequest
+	if err := json.NewDecoder(r.Body).Decode(&refreshReq); err != nil {
 		http.Error(w, "invalid request body", http.StatusBadRequest)
 		return
 	}
 
-	body, _ := json.Marshal(logoutReq)
+	//pass json
+	body, _ := json.Marshal(refreshReq)
 
-	req, err := http.NewRequest("POST", logout_route, bytes.NewBuffer(body))
+	req, err := http.NewRequest("POST", refreshtoken_route, bytes.NewBuffer(body))
 	if err != nil {
-		fmt.Println("proxy login route:", logout_route)
+		fmt.Println("proxy refresh route:", refreshReq)
 		http.Error(w, "bad gateway1", http.StatusBadGateway)
 		return
 	}
+
 	req.Header = r.Header.Clone()
 
 	res, err := internal.HTTPClient.Do(req)
@@ -60,24 +66,37 @@ func (s *Server) ProxyLogout(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "application/json")
 
 	// Repackage response: extract actual fields from upstream JSON
+	fmt.Println("Raw upstream response body:", string(resBody))
 	var upstreamMap map[string]interface{}
 	if err := json.Unmarshal(resBody, &upstreamMap); err != nil {
 		http.Error(w, "invalid upstream response 1", http.StatusInternalServerError)
+		fmt.Println("map: ", upstreamMap)
 		return
 	}
-	type UpstreamLoginResponse struct {
+
+	type UpstreamRefreshResponse struct {
 		// upstream calls it "token"
-		Message string `json:"message"` // only if upstream returns it
+
+		AccessToken  string    `json:"access_token"`
+		RefreshToken string    `json:"refresh_token"`
+		DeviceID     string    `json:"device_id"`
+		Expires      time.Time `json:"expires"` // only if upstream returns it
 	}
-	var upstreamResp UpstreamLoginResponse
+
+	var upstreamResp UpstreamRefreshResponse
+
 	if err := json.Unmarshal(resBody, &upstreamResp); err != nil {
 		http.Error(w, "invalid upstream response 2", http.StatusInternalServerError)
 		return
 	}
 
-	resp := models.LogoutResponse{
+	resp := models.RefreshResponse{
 		// real token from upstream
-		Message: upstreamResp.Message,
+
+		AccessToken:  upstreamResp.AccessToken,
+		RefreshToken: upstreamResp.RefreshToken,
+		DeviceID:     upstreamResp.DeviceID,
+		Expires:      upstreamResp.Expires,
 	}
 
 	// Write status code
@@ -88,4 +107,5 @@ func (s *Server) ProxyLogout(w http.ResponseWriter, r *http.Request) {
 		fmt.Println("Failed encoding repackaged response:", err)
 	}
 	defer res.Body.Close()
+
 }
