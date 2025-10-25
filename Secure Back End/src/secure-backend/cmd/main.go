@@ -14,11 +14,9 @@ import (
 // init server
 func main() {
 
-	auth_db, err := authdb.AuthDBClient()
+	auth_Client, err := authdb.AuthService()
 	if err != nil {
-		log.Fatal("failed to connect to auth db", err)
-
-		defer auth_db.Close()
+		log.Fatal("failed to connect to auth service")
 	}
 
 	data_db, err := datadb.DataDBClient()
@@ -33,8 +31,8 @@ func main() {
 		}
 	}()
 
-	server := server.AppServer(auth_db, data_db, logger)
-	http.ListenAndServe(":8003", server.Router)
+	server := server.AppServer(auth_Client, data_db, logger)
+	http.ListenAndServe(":8004", server.Router)
 	if err != nil {
 		fmt.Println("error starting server")
 	}

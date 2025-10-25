@@ -1,25 +1,27 @@
-
--- make sure var match in queries
-
-
 CREATE TABLE IF NOT EXISTS users (
-    uuid     CHAR(36) NOT NULL DEFAULT (UUID()),
+    uuid     CHAR(36) NOT NULL PRIMARY KEY DEFAULT (UUID()),
     username VARCHAR(255) NOT NULL,
     password VARCHAR(255) NOT NULL,
     role     VARCHAR(255) NOT NULL DEFAULT 'basic'
 
+
+);
+CREATE TABLE IF NOT EXISTS access_token (
+    uuid     CHAR(36) NOT NULL PRIMARY KEY ,
+    username VARCHAR(255) NOT NULL,
+    role     VARCHAR(255) NOT NULL DEFAULT 'basic',
+	FOREIGN KEY (uuid) REFERENCES user(uuid)
 );
 
-CREATE TABLE IF NOT EXISTS users (
-    uuid     CHAR(36) NOT NULL PRIMARY KEY DEFAULT (UUID()),
-    ->     username VARCHAR(255) NOT NULL PRIMARY KEY,
-    ->     password VARCHAR(255) NOT NULL,
-    ->     role     VARCHAR(255) NOT NULL DEFAULT 'basic'
-    -> );
 
-    CREATE DATABASE IF NOT EXISTS records;
-USE records;
+CREATE TABLE IF NOT EXISTS user_profile (
+    uuid     CHAR(36) NOT NULL PRIMARY KEY,
+    username VARCHAR(255) NOT NULL,
+    email VARCHAR(255) NOT NULL,
+    role     VARCHAR(255) NOT NULL DEFAULT 'basic',
+  	FOREIGN KEY (uuid) REFERENCES access_token(uuid)
 
+);
 
 CREATE TABLE snakes (
     suid        CHAR(36) NOT NULL PRIMARY KEY DEFAULT (UUID()),
@@ -29,8 +31,10 @@ CREATE TABLE snakes (
     sex         CHAR(1),
     age   CHAR(3),
     genes       CHAR(255),
-    notes       CHAR(255)
-
+    notes       CHAR(255),
+  	male_lineage_uuid   CHAR(36),
+	female_lineage_uuid CHAR(36),
+	FOREIGN KEY (uuid) REFERENCES user_profile(uuid)
 );
 
 CREATE TABLE feeding (
@@ -41,7 +45,8 @@ CREATE TABLE feeding (
     prey_type   VARCHAR(100),
     prey_size    VARCHAR(50),
     notes       TEXT(255),
-    FOREIGN KEY (suid) REFERENCES snakes(suid)
+    FOREIGN KEY (suid) REFERENCES snakes(suid),
+  	FOREIGN KEY (uuid) REFERENCES user_profile(uuid)
 );
 
 CREATE TABLE health (
@@ -54,15 +59,13 @@ CREATE TABLE health (
     topic     VARCHAR(50),
     notes       TEXT(255),
     PRIMARY KEY (suid, check_date),
-    FOREIGN KEY (suid) REFERENCES snakes(suid)
+    FOREIGN KEY (suid) REFERENCES snakes(suid),
+  	FOREIGN KEY (uuid) REFERENCES user_profile(uuid)
 );
 
--- breeding
-
 CREATE TABLE breeding (
-    breeding_uuid        CHAR(36) NOT NULL PRIMARY KEY DEFAULT (UUID()),
+    event_uuid        CHAR(36) NOT NULL PRIMARY KEY DEFAULT (UUID()),
     uuid           CHAR(36) NOT NULL,
-    event_id    CHAR(36) NOT NULL,
     female_suid    CHAR(36) NOT NULL,
     male1_suid      CHAR(36) NOT NULL,
     male2_suid      CHAR(36),
@@ -95,15 +98,14 @@ CREATE TABLE breeding (
     outcome        VARCHAR(50),
     notes          TEXT(255),
     FOREIGN KEY (female_suid)      REFERENCES snakes(suid),
-    FOREIGN KEY (male1_suid) REFERENCES snakes(suid)
+    FOREIGN KEY (male1_suid) REFERENCES snakes(suid),
+  	FOREIGN KEY (uuid) REFERENCES user_profile(uuid)
 );
-
--- offspring
 
 CREATE TABLE offspring (
     suid        CHAR(36) NOT NULL,
     uuid  CHAR(36) NOT NULL,
-    breeding_uuid   CHAR(36) NOT NULL,
+    breeding_event_uuid   CHAR(36) NOT NULL,
     sid         VARCHAR(100) NOT NULL,
     hatch_date  DATE NOT NULL,
     mother_suid      CHAR(36) NOT NULL,
@@ -114,6 +116,13 @@ CREATE TABLE offspring (
     mother_genes       CHAR(255),
     father_genes       CHAR(255),
     notes       TEXT(255),
-    PRIMARY KEY (suid, check_date),
-    FOREIGN KEY (suid) REFERENCES snakes(suid)
+    PRIMARY KEY (suid),
+    FOREIGN KEY (suid) REFERENCES snakes(suid),
+  	FOREIGN KEY (mother_suid) REFERENCES snakes(suid),
+  	FOREIGN KEY (father_suid) REFERENCES snakes(suid),
+  	FOREIGN KEY (uuid) REFERENCES user_profile(uuid),
+  	FOREIGN KEY (breeding_event_uuid) REFERENCES breeding(event_uuid)
 );
+
+
+

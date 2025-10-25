@@ -3,6 +3,7 @@ module github.com/dvg1130/Portfolio/secure-backend
 go 1.24.1
 
 require (
+	github.com/dvg1130/Portfolio/secure-auth v1.0.25
 	github.com/go-sql-driver/mysql v1.9.3
 	github.com/joho/godotenv v1.5.1
 )

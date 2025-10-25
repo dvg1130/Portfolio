@@ -4,41 +4,41 @@ import (
 	"database/sql"
 	"net/http"
 
+	"github.com/dvg1130/Portfolio/secure-auth/authsdk"
 	"github.com/dvg1130/Portfolio/secure-backend/internal/api"
 	"github.com/dvg1130/Portfolio/secure-backend/internal/helpers"
 	"github.com/dvg1130/Portfolio/secure-backend/internal/middleware"
 	"github.com/dvg1130/Portfolio/secure-backend/models"
-	redisdb "github.com/dvg1130/Portfolio/secure-backend/repo/redis_db"
-	"github.com/redis/go-redis/v9"
 	"go.uber.org/zap"
 )
 
 type Server struct {
-	Router  *http.ServeMux
-	AUTH_DB *sql.DB
-	Data_DB *sql.DB
-	Redis   *redis.Client
-	Logger  *zap.SugaredLogger
-	S       *sql.DB
+	Router *http.ServeMux
+
+	AuthClient *authsdk.SDKClient
+	Data_DB    *sql.DB
+
+	Logger *zap.SugaredLogger
+	S      *sql.DB
 }
 
-func AppServer(auth_db *sql.DB, data_db *sql.DB, logger *zap.SugaredLogger) *Server {
-	rdb := redisdb.RedisClient()
+func AppServer(authClient *authsdk.SDKClient, data_db *sql.DB, logger *zap.SugaredLogger) *Server {
+
 	s := &Server{
-		Router:  http.NewServeMux(),
-		AUTH_DB: auth_db,
-		Data_DB: data_db,
-		Redis:   rdb,
-		Logger:  logger,
+		Router:     http.NewServeMux(),
+		AuthClient: authClient,
+		Data_DB:    data_db,
+
+		Logger: logger,
 	}
 
-	api.InitRoutes_Auth(s.Router, &models.AuthHandlers{
-		Handler:      s.Handler,
-		Login:        s.Login,
-		Register:     s.Register,
-		Logout:       s.Logout,
-		TokenRefresh: s.TokenRefresh,
-	})
+	// api.InitRoutes_Auth(s.Router, &models.AuthHandlers{
+	// 	Handler:      s.Handler,
+	// 	Login:        s.Login,
+	// 	Register:     s.Register,
+	// 	Logout:       s.Logout,
+	// 	TokenRefresh: s.TokenRefresh,
+	// })
 
 	api.InitRoutes_Data(s.Router, s.Data_DB, s.Logger, &models.DataHandlers{
 		//snakes
@@ -64,12 +64,12 @@ func AppServer(auth_db *sql.DB, data_db *sql.DB, logger *zap.SugaredLogger) *Ser
 	},
 	)
 
-	api.InitRoutes_Admin(s.Router, s.Logger,
-		&models.AdminHandlers{
-			AdminGetAll: s.AdminGetAll,
-			AdminGetOne: s.AdminGetOne,
-			AdminUpdate: s.AdminUpdate,
-		})
+	api.InitRoutes_Auth(s.Router, &models.AuthHandlers{
+		RegisterHandler: s.RegisterHandler,
+		LoginHandler:    s.LoginHandler,
+		LogoutHandler:   s.LogoutHandler,
+		TokenRefresh:    s.TokenRefresh,
+	})
 
 	api.InitRoutes_Breeding(s.Router, &models.BreedingHandlers{
 		//breeding

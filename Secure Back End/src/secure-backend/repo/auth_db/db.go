@@ -1,22 +1,31 @@
 package authdb
 
 import (
-	"database/sql"
 	"fmt"
+	"log"
+	"net/http"
 
+	"github.com/dvg1130/Portfolio/secure-auth/authsdk"
 	"github.com/dvg1130/Portfolio/secure-backend/config"
 	_ "github.com/go-sql-driver/mysql"
 )
 
-func AuthDBClient() (*sql.DB, error) {
-	db, err := sql.Open(config.AuthConfig.DB_DRIVER, config.AuthConfig.DATABASE_URL)
-	if err != nil {
-		return nil, err
-	}
+func AuthService() (sso *authsdk.SDKClient, err error) {
+	// var base = config
+	sso = authsdk.NewClient(config.AuthService.SSO_ADDR)
 
-	if err := db.Ping(); err != nil {
+	resp, err := http.Get(config.AuthService.SSO_ADDR + "/health")
+	if err != nil {
+		fmt.Println("error reaching service at: ", config.AuthService.SSO_ADDR)
 		return nil, err
 	}
-	fmt.Println("connected to auth db")
-	return db, nil
+	defer resp.Body.Close()
+
+	if resp.StatusCode == 200 {
+		log.Println("Auth service is healthy")
+	} else {
+		log.Println("Auth service returned status:", resp.StatusCode)
+	}
+	return sso, nil
+
 }

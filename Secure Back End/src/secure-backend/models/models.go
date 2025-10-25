@@ -13,3 +13,8 @@ type DataConfigStruct struct {
 	DB_DRIVER    string
 	PORT         string
 }
+
+type AuthServiceConfig struct {
+	SSO_ADDR  string
+	SSO_LOGIN string
+}

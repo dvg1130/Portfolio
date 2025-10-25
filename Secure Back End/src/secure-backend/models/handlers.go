@@ -14,11 +14,11 @@ type AdminHandlers struct {
 
 type AuthHandlers struct {
 	//auth
-	Handler      http.HandlerFunc
-	Login        http.HandlerFunc
-	Register     http.HandlerFunc
-	Logout       http.HandlerFunc
-	TokenRefresh http.HandlerFunc
+	Handler         http.HandlerFunc
+	RegisterHandler http.HandlerFunc
+	LoginHandler    http.HandlerFunc
+	TokenRefresh    http.HandlerFunc
+	LogoutHandler   http.HandlerFunc
 }
 
 type DataHandlers struct {

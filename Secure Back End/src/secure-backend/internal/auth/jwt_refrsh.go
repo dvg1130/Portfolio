@@ -81,7 +81,6 @@ func RotateRefreshToken(ctx context.Context, redis *redis.Client, oldToken strin
 	newSession := models.RefreshSession{
 		RefreshToken: newRefreshToken,
 		DeviceID:     deviceID,
-		ExpiresAt:    exp,
 	}
 	newSessionJSON, _ := json.Marshal(newSession)
 	ttl := time.Until(exp)

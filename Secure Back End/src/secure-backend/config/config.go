@@ -12,6 +12,7 @@ import (
 
 var AuthConfig models.AuthConfigStruct
 var DataConfig models.DataConfigStruct
+var AuthService models.AuthServiceConfig
 
 func init() {
 
@@ -32,5 +33,10 @@ func init() {
 		DATABASE_URL: os.Getenv("DATA_DATABASE_URL"),
 		DB_DRIVER:    os.Getenv("DATA_DB_DRIVER"),
 		PORT:         os.Getenv("DATA_PORT"),
+	}
+
+	AuthService = models.AuthServiceConfig{
+		SSO_ADDR:  os.Getenv("SSO_ADDR"),
+		SSO_LOGIN: os.Getenv("SSO_LOGIN"),
 	}
 }
